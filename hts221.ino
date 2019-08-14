@@ -3,6 +3,7 @@
   HTS221 - Read Sensors
 
 
+  Download the library to use this: https://github.com/arduino-libraries/Arduino_HTS221
 
   This example reads data from the on-board HTS221 sensor of the
 
