@@ -3,7 +3,6 @@
   HTS221 - Read Sensors
 
 
-  Download the library to use this: https://github.com/arduino-libraries/Arduino_HTS221
 
   This example reads data from the on-board HTS221 sensor of the
 
@@ -26,6 +25,13 @@
 
 
 #include <Arduino_HTS221.h>
+#include <ArduinoBLE.h>
+
+BLEService sensorService("19B10010-E8F2-537E-4F6C-D104768A1999");
+BLEFloatCharacteristic tempCharac("19B10010-E8F2-537E-4F6C-D104768A1999", BLEBroadcast | BLEWriteWithoutResponse);
+BLEFloatCharacteristic humidCharac("19B10010-E8F2-537E-4F6C-D104768A1999", BLEBroadcast | BLEWriteWithoutResponse);
+
+
 
 
 
@@ -35,7 +41,19 @@ void setup() {
 
   while (!Serial);
 
+ if (!BLE.begin()) {
+    Serial.println("starting BLE failed!");
 
+    while (1);
+  }
+
+  BLE.setLocalName("FerdmanSensor");
+  BLE.setAdvertisedService(sensorService); //advertises the service we made
+  sensorService.addCharacteristic(tempCharac);
+  sensorService.addCharacteristic(humidCharac);
+  BLE.addService(sensorService);
+  BLE.advertise();
+  Serial.println("Bluetooth device active, waiting for connections...");
 
   if (!HTS.begin()) {
 
@@ -51,12 +69,12 @@ void setup() {
 
 void loop() {
 
+  
   // read all the sensor values
 
   float temperature = HTS.readTemperature();
 
   float humidity    = HTS.readHumidity();
-
 
 
   // print each of the sensor values
@@ -67,7 +85,7 @@ void loop() {
 
   Serial.println(" °C");
 
-
+  tempCharac.writeValue(temperature);
 
   Serial.print("Humidity    = ");
 
