@@ -1,12 +1,11 @@
-"""Support for Xiaomi Mi Temp BLE environmental sensor."""
 import logging
 
-import voluptuous as vol
+import voluptuous as vol #Idk what this is
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
+from homeassistant.components.sensor import PLATFORM_SCHEMA #i assume this is the schematic for like inputting things in the configuration.yaml
+from homeassistant.helpers.entity import Entity # this is the descriptor
+import homeassistant.helpers.config_validation as cv #no idea what this is. 
+from homeassistant.const import (#NSSB these are the components that dictate what needs to be in the configurtation.yaml
     CONF_FORCE_UPDATE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
@@ -19,7 +18,7 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ADAPTER = "adapter"
+CONF_ADAPTER = "adapter" #??????
 CONF_CACHE = "cache_value"
 CONF_MEDIAN = "median"
 CONF_RETRIES = "retries"
@@ -29,12 +28,12 @@ DEFAULT_ADAPTER = "hci0"
 DEFAULT_UPDATE_INTERVAL = 300
 DEFAULT_FORCE_UPDATE = False
 DEFAULT_MEDIAN = 3
-DEFAULT_NAME = "MiTemp BT"
+DEFAULT_NAME = "BLE_sensor" #I think i can change this so i will from "MiTemp BT" to "BLE_sensor"
 DEFAULT_RETRIES = 2
 DEFAULT_TIMEOUT = 10
 
 
-# Sensor types are defined like: Name, units
+# Sensor types are defined like: Name, units //NSSB from HassIO stuff
 SENSOR_TYPES = {
     "temperature": [DEVICE_CLASS_TEMPERATURE, "Temperature", "°C"],
     "humidity": [DEVICE_CLASS_HUMIDITY, "Humidity", "%"],
@@ -59,9 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the MiTempBt sensor."""
-    from mitemp_bt import mitemp_bt_poller
-
+    
     try:
         import bluepy.btle  # noqa: F401 pylint: disable=unused-import
         from btlewrap import BluepyBackend
@@ -74,8 +71,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     _LOGGER.debug("MiTempBt is using %s backend.", backend.__name__)
 
     cache = config.get(CONF_CACHE)
-    poller = mitemp_bt_poller.MiTempBtPoller(
-        config.get(CONF_MAC),
+    
+    '''poller = mitemp_bt_poller.MiTempBtPoller(    # this looks like stuff that I don't need or at least need to change to something else
+                                                    # like maybe I need to change it to some other kind of poller
+       config.get(CONF_MAC),
         cache_timeout=cache,
         adapter=config.get(CONF_ADAPTER),
         backend=backend,
@@ -84,7 +83,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     median = config.get(CONF_MEDIAN)
     poller.ble_timeout = config.get(CONF_TIMEOUT)
     poller.retries = config.get(CONF_RETRIES)
-
+'''
     devs = []
 
     for parameter in config[CONF_MONITORED_CONDITIONS]:
@@ -97,18 +96,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             name = f"{prefix} {name}"
 
         devs.append(
-            MiTempBtSensor(poller, parameter, device, name, unit, force_update, median)
+            #MiTempBtSensor(poller, parameter, device, name, unit, force_update, median) #need to change this too
         )
 
     add_entities(devs)
 
 
-class MiTempBtSensor(Entity):
+class MiTempBtSensor(Entity):#????
     """Implementing the MiTempBt sensor."""
 
     def __init__(self, poller, parameter, device, name, unit, force_update, median):
         """Initialize the sensor."""
-        self.poller = poller
+        self.poller = poller#this needs to go
         self.parameter = parameter
         self._device = device
         self._unit = unit
