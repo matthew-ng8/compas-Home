@@ -27,9 +27,12 @@
 #include <Arduino_HTS221.h>
 #include <ArduinoBLE.h>
 
+
 BLEService sensorService("19B10010-E8F2-537E-4F6C-D104768A1999");
-BLEFloatCharacteristic tempCharac("19B10010-E8F2-537E-4F6C-D104768A1999", BLEBroadcast | BLEWriteWithoutResponse);
-BLEFloatCharacteristic humidCharac("19B10010-E8F2-537E-4F6C-D104768A1999", BLEBroadcast | BLEWriteWithoutResponse);
+BLEFloatCharacteristic tempCharac("19B10010-E8F2-537E-4F6C-D104768A1909", BLENotify |BLERead);
+BLEFloatCharacteristic humidCharac("19B10010-E8F2-537E-4F6C-D104768A1999", BLENotify| BLERead);
+int inPin = 16;//on the board, 16 is what is wired as per our standard at least
+int val;
 
 
 
@@ -62,6 +65,10 @@ void setup() {
     while (1);
 
   }
+  
+  pinMode(inPin, INPUT);//setting the inPin to be input
+  val = 0;
+  
 
 }
 
@@ -69,7 +76,20 @@ void setup() {
 
 void loop() {
 
-  
+  if(BLE.connected()){
+    Serial.println("IM  CONNECTED"); 
+  }
+  else{
+    Serial.println("IM NOT CONNECTED :( ");
+  }
+
+  if(BLE.central()){
+    Serial.print("connected to central");
+    Serial.println(BLE.central().address());
+  }
+  else{
+    Serial.println("NO CENTRAL CONNECTED");
+  }
   // read all the sensor values
 
   float temperature = HTS.readTemperature();
@@ -85,7 +105,7 @@ void loop() {
 
   Serial.println(" °C");
 
-  tempCharac.writeValue(temperature);
+  tempCharac.writeValue(temperature);//does this not write the value to the character?
 
   Serial.print("Humidity    = ");
 
@@ -98,6 +118,9 @@ void loop() {
   // print an empty line
 
   Serial.println();
+  val = digitalRead(inPin);
+  Serial.print(val);
+  Serial.println(" ");
 
 
 
