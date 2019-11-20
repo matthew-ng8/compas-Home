@@ -29,8 +29,8 @@
 
 
 BLEService sensorService("19B10010-E8F2-537E-4F6C-D104768A1999");
-BLEFloatCharacteristic tempCharac("19B10010-E8F2-537E-4F6C-D104768A1909", BLENotify |BLERead);
-BLEFloatCharacteristic humidCharac("19B10010-E8F2-537E-4F6C-D104768A1999", BLENotify| BLERead);
+BLEIntCharacteristic tempCharac("19B10010-E8F2-537E-4F6C-D104768A1909", BLENotify |BLERead);
+BLEIntCharacteristic humidCharac("19B10010-E8F2-537E-4F6C-D104768A1999", BLENotify| BLERead);
 int inPin = 16;//on the board, 16 is what is wired as per our standard at least
 int val;
 
@@ -75,11 +75,11 @@ void setup() {
 
 
 void loop() {
-
-  if(BLE.connected()){
-    Serial.println("IM  CONNECTED"); 
-  }
+   if(BLE.connected()){
+      Serial.println("IM  CONNECTED"); 
+   }
   else{
+    BLE.disconnect();
     Serial.println("IM NOT CONNECTED :( ");
   }
 
@@ -105,7 +105,8 @@ void loop() {
 
   Serial.println(" °C");
 
-  tempCharac.writeValue(temperature);//does this not write the value to the character?
+  //tempCharac.writeValue(temperature);//does this not write the value to the character?
+  tempCharac.writeValue((int)temperature);
 
   Serial.print("Humidity    = ");
 
