@@ -103,9 +103,17 @@ class nanoBLE(Entity):
         data = data.decode("utf-8")
         f.write(data)
         data = shlex.split(data)
+        f.write("This is splitting it up:")
         for x in data:
             f.write(x)
-        self._state = int(data[2],16)
+        f.write("The number of elements = " + (str)(len(data)))
+        if(len(data) ==0 ):
+            return
+        data[3] = data[3] + "00"
+        total = int(data[3], 16) + int(data[2], 16)
+        decimal = total /100.00
+        f.write((str)(decimal))
+        self._state = decimal
         
 
         f.close()
