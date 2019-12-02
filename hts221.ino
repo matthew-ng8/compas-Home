@@ -93,6 +93,7 @@ void loop() {
   // read all the sensor values
 
   float temperature = HTS.readTemperature();
+  //float temperature = 26.23;
 
   float humidity    = HTS.readHumidity();
 
@@ -106,7 +107,7 @@ void loop() {
   Serial.println(" °C");
 
   //tempCharac.writeValue(temperature);//does this not write the value to the character?
-  tempCharac.writeValue((int)temperature);
+  tempCharac.writeValue((int)(temperature*100));
 
   Serial.print("Humidity    = ");
 
