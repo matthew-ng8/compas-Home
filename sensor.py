@@ -100,20 +100,10 @@ class nanoBLE(Entity):
         for x in args:
             f.write(x+ '\n')
         data= Popen(args, stdin= PIPE, stdout=PIPE, stderr=PIPE).communicate()[0]
-        data = data.decode("utf-8")
-        f.write(data)
-        data = shlex.split(data)
-        f.write("This is splitting it up:")
-        for x in data:
-            f.write(x)
-        f.write("The number of elements = " + (str)(len(data)))
         if(len(data) ==0 ):
-            return
-        data[3] = data[3] + "00"
-        total = int(data[3], 16) + int(data[2], 16)
-        decimal = total /100.00
-        f.write((str)(decimal))
-        self._state = decimal
-        
-
+           return
+        conver = data.split()[2].decode()+data.split()[3].decode()+data.split()[4].decode()+data.split()[5].decode()
+        data = struct.unpack('>f', struct.pack('<I', int(conver, 16)))
+        self._state = round(data[0], 2)
+        #--------------------------------------------------------------------
         f.close()
