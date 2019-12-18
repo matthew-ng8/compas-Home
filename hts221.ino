@@ -1,55 +1,48 @@
 /*
 
-  HTS221 - Read Sensors
-
-
-
-  This example reads data from the on-board HTS221 sensor of the
-
-  Nano 33 BLE Sense and prints the temperature and humidity sensor
-
-  values to the Serial Monitor once a second.
-
-
-
-  The circuit:
-
-  - Arduino Nano 33 BLE Sense
-
-
-
-  This example code is in the public domain.
-
 */
 
 
 
 #include <Arduino_HTS221.h>
 #include <ArduinoBLE.h>
+#include <Arduino_APDS9960.h>
+#define timeSeconds 5
 
 
 BLEService sensorService("19B10010-E8F2-537E-4F6C-D104768A1999");
-BLEIntCharacteristic tempCharac("19B10010-E8F2-537E-4F6C-D104768A1909", BLENotify |BLERead);
+//BLEIntCharacteristic tempCharac("19B10010-E8F2-537E-4F6C-D104768A1909", BLENotify |BLERead);
+BLEFloatCharacteristic tempCharac("19B10010-E8F2-537E-4F6C-D104768A1909", BLENotify |BLERead);
+
+
 BLEIntCharacteristic humidCharac("19B10010-E8F2-537E-4F6C-D104768A1999", BLENotify| BLERead);
-int inPin = 16;//on the board, 16 is what is wired as per our standard at least
+int inPin = 12;//on the board
 int val;
+// Timer: Auxiliary variables
+unsigned long now = millis();
+unsigned long lastTrigger = 0;
+boolean startTimer = false;
 
 
 
+void detectsMovement() {
+  Serial.println("MOTION DETECTED!!!");
+  startTimer = true;
+  lastTrigger = millis();
+}
 
 
 void setup() {
 
   Serial.begin(9600);
-
   while (!Serial);
 
+  //BLE STUFF
  if (!BLE.begin()) {
     Serial.println("starting BLE failed!");
 
     while (1);
   }
-
   BLE.setLocalName("FerdmanSensor");
   BLE.setAdvertisedService(sensorService); //advertises the service we made
   sensorService.addCharacteristic(tempCharac);
@@ -58,16 +51,21 @@ void setup() {
   BLE.advertise();
   Serial.println("Bluetooth device active, waiting for connections...");
 
+  //initialize Humidity and sensor stuff
   if (!HTS.begin()) {
-
     Serial.println("Failed to initialize humidity temperature sensor!");
-
     while (1);
-
   }
   
   pinMode(inPin, INPUT);//setting the inPin to be input
   val = 0;
+  //attachInterrupt(digitalPinToInterrupt(inPin), detectsMovement, RISING);
+
+  //initialize the gesture, color, proximity sensor
+  if (!APDS.begin()) {
+    Serial.println("Error initializing APDS9960 sensor!");
+  }
+
   
 
 }
@@ -75,6 +73,9 @@ void setup() {
 
 
 void loop() {
+  int proximity = 0;
+  int r = 0, g = 0, b = 0;
+  unsigned long lastUpdate = 0;
    if(BLE.connected()){
       Serial.println("IM  CONNECTED"); 
    }
@@ -93,38 +94,93 @@ void loop() {
   // read all the sensor values
 
   float temperature = HTS.readTemperature();
-  //float temperature = 26.23;
 
   float humidity    = HTS.readHumidity();
 
 
   // print each of the sensor values
-
+  /*
   Serial.print("Temperature = ");
-
   Serial.print(temperature);
-
   Serial.println(" °C");
+  */
+  tempCharac.writeValue(temperature);//uncomment to test FloatCharacteristic
 
-  //tempCharac.writeValue(temperature);//does this not write the value to the character?
-  tempCharac.writeValue((int)(temperature*100));
-
+  /*
   Serial.print("Humidity    = ");
-
   Serial.print(humidity);
-
   Serial.println(" %");
+  */
 
-
-
+  humidCharac.writeValue(humidity);
   // print an empty line
 
   Serial.println();
+  pinMode(inPin, INPUT);
   val = digitalRead(inPin);
   Serial.print(val);
   Serial.println(" ");
+  if(val == 0){
+    Serial.println("NO MOTION");
+  }
+  else if(val == 1){
+    Serial.println("Motion");
+  }
 
+  /*
+  now = millis();
+  if(startTimer && (now - lastTrigger > (timeSeconds*1000))) {
+    Serial.println("Motion stopped...");
+    startTimer = false;
+  }
+  */
 
+// Check if a proximity reading is available.
+  if (APDS.proximityAvailable()) {
+    proximity = APDS.readProximity();
+  }
+
+  // check if a gesture reading is available
+  if (APDS.gestureAvailable()) {
+    int gesture = APDS.readGesture();
+    switch (gesture) {
+      case GESTURE_UP:
+        Serial.println("Detected UP gesture");
+        break;
+
+      case GESTURE_DOWN:
+        Serial.println("Detected DOWN gesture");
+        break;
+
+      case GESTURE_LEFT:
+        Serial.println("Detected LEFT gesture");
+        break;
+
+      case GESTURE_RIGHT:
+        Serial.println("Detected RIGHT gesture");
+        break;
+
+      default:
+        // ignore
+        break;
+    }
+  }
+
+   if (APDS.colorAvailable()) {
+    APDS.readColor(r, g, b);
+  }
+
+  if (millis() - lastUpdate > 100) {
+    lastUpdate = millis();
+    Serial.print("PR=");
+    Serial.print(proximity);
+    Serial.print(" rgb=");
+    Serial.print(r);
+    Serial.print(",");
+    Serial.print(g);
+    Serial.print(",");
+    Serial.println(b);
+  }
 
   // wait 1 second to print again
 
